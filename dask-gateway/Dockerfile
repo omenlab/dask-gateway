@@ -21,7 +21,7 @@
 # psutils, a dependency of distributed, is currently the sole reason we have to
 # have this build stage.
 #
-FROM python:3.11-bullseye as build-stage
+FROM python:3.10-bullseye as build-stage
 
 # Build wheels
 #
@@ -31,7 +31,8 @@ FROM python:3.11-bullseye as build-stage
 COPY . /opt/dask-gateway
 ARG PIP_CACHE_DIR=/tmp/pip-cache
 RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
-    pip install build \
+ pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \ 
+ &&   pip install build \
  && pip wheel \
         --wheel-dir=/tmp/wheels \
         -r /opt/dask-gateway/Dockerfile.requirements.txt
@@ -40,7 +41,8 @@ RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
 # The final stage
 # ---------------
 #
-FROM python:3.11-slim-bullseye as slim-stage
+FROM python:3.10-slim-bullseye as slim-stage
+
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
@@ -61,12 +63,15 @@ USER dask:dask
 ENV PATH=/home/dask/.local/bin:$PATH
 WORKDIR /home/dask/
 
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
 # Install dask-gateway
 COPY --chown=dask:dask . /opt/dask-gateway
 ARG PIP_CACHE_DIR=/tmp/pip-cache
 RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
     --mount=type=cache,from=build-stage,source=/tmp/wheels,target=/tmp/wheels \
-    pip install \
+   pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \ 
+   && pip install \
         --find-links=/tmp/wheels/ \
         -r /opt/dask-gateway/Dockerfile.requirements.txt
 

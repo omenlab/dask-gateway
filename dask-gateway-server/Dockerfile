@@ -6,7 +6,7 @@
 # - api pod command:        dask-gateway-server ...
 # - controller pod command: dask-gateway-server kube-controller ...
 #
-FROM python:3.11-slim-bullseye
+FROM python:3.10-slim-bullseye
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
@@ -19,7 +19,7 @@ LABEL org.opencontainers.image.url="https://github.com/dask/dask-gateway/blob/HE
 RUN apt-get update \
  && apt-get upgrade -y \
  && apt-get install -y \
-        tini \
+        tini golang-go \
  && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user to run as
@@ -28,13 +28,16 @@ USER dask:dask
 ENV PATH=/home/dask/.local/bin:$PATH
 WORKDIR /home/dask/
 
+RUN go env -w GOPROXY=https://goproxy.cn,direct
+
 # Install dask-gateway-server
 #
 # The Golang proxy binary isn't built as the dask-gateway Helm chart relies on
 # Traefik as a proxy instead to run in its dedicated pod.
 #
 COPY --chown=dask:dask . /opt/dask-gateway-server
-RUN DASK_GATEWAY_SERVER__NO_PROXY=true pip install --no-cache-dir \
+RUN DASK_GATEWAY_SERVER__NO_PROXY=true pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \ 
+     && pip install --no-cache-dir \
         -r /opt/dask-gateway-server/Dockerfile.requirements.txt
 
 ENTRYPOINT ["tini", "-g", "--"]

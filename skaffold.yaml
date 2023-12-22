@@ -20,11 +20,11 @@ build:
     push: false
     useBuildkit: true
   artifacts:
-  - image: ghcr.io/dask/dask-gateway-server
+  - image: omenlab/dask-gateway-server
     context: ./dask-gateway-server
     docker:
       dockerfile: Dockerfile
-  - image: ghcr.io/dask/dask-gateway
+  - image: omenlab/dask-gateway
     context: ./dask-gateway
     docker:
       dockerfile: Dockerfile
