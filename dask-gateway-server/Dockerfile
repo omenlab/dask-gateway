@@ -19,7 +19,7 @@ LABEL org.opencontainers.image.url="https://github.com/dask/dask-gateway/blob/HE
 RUN apt-get update \
  && apt-get upgrade -y \
  && apt-get install -y \
-        tini golang-go \
+        tini libzstd-dev golang-go \
  && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user to run as
